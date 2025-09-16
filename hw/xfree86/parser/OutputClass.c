@@ -80,7 +80,7 @@ xf86parseOutputClassSection(void)
 
     parsePrologue(XF86ConfOutputClassPtr, XF86ConfOutputClassRec)
 
-    /* MatchGroup and MatchLayout lists are zeroed by parsePrologue(),
+    /* MatchDriver and MatchLayout lists are zeroed by parsePrologue(),
      * which is equivalent to xorg_list_init() */
 
     while ((token = xf86getToken(OutputClassTab)) != ENDSECTION) {

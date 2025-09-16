@@ -285,6 +285,7 @@ xf86platformProbe(void)
     }
 
     for (i = 0; i < xf86_num_platform_devices; i++) {
+        struct xf86_platform_device *dev = &xf86_platform_devices[i];
         char *busid = xf86_platform_odev_attributes(i)->busid;
 
         if (pci && busid && (strncmp(busid, "pci:", 4) == 0)) {
@@ -367,6 +368,40 @@ xf86platformProbe(void)
                         }
                 }
                 /* Otherwise global module search path is left unchanged */
+            }
+
+            if (xf86CheckBoolOption(cl->option_lst, "IgnoreABI", FALSE)) {
+                if (cl->driver) {
+                    LogMessageVerb(X_CONFIG, 1, "OutputClass \"%s\" requires to ignore ABI for driver %s because \"%s\" managed by %s is found\n",
+                               cl->identifier, cl->driver, dev->attribs->path, dev->attribs->driver);
+                    if (*(cl->driver)) LoaderSetIgnoreABI(cl->driver);
+                    if (cl->modules) {
+                        LogMessageVerb(X_CONFIG, 1, "    and for modules \"%s\" as well\n",
+                                cl->modules);
+                        XNFasprintf(&copy, "%s", cl->modules);
+                        curr = copy;
+                        while ((curr = strtok_r(curr, ",", &next))) {
+                            if (*curr) LoaderSetIgnoreABI(curr);
+                            curr = NULL;
+                        }
+                        free(copy);
+                    }
+                } else if (cl->modules) {
+                    LogMessageVerb(X_CONFIG, 1, "OutputClass \"%s\" requires to ignore ABI for modules \"%s\" to because \"%s\" managed by %s is found\n",
+                               cl->identifier, cl->modules, dev->attribs->path, dev->attribs->driver);
+                    XNFasprintf(&copy, "%s", cl->modules);
+                    curr = copy;
+                    while ((curr = strtok_r(curr, ",", &next))) {
+                        if (*curr) LoaderSetIgnoreABI(curr);
+                        curr = NULL;
+                    }
+                    free(copy);
+
+                } else {
+                    LogMessageVerb(X_CONFIG, 1, "OutputClass \"%s\" requires to ignore ABI because \"%s\" managed by %s is found\n"
+                            "   but neither \"Driver\" nor \"Module\" is not set\n",
+                            cl->identifier, dev->attribs->path, dev->attribs->driver);
+                }
             }
         }
     }
